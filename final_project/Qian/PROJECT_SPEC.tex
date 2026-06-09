@@ -1,0 +1,440 @@
+\documentclass[11pt,a4paper]{ctexart}
+
+% ========== 宏包 ==========
+\usepackage{amsmath,amssymb}
+\usepackage[margin=2.3cm]{geometry}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage[most]{tcolorbox}
+\usepackage{pifont}
+
+% ========== 配色与超链接 ==========
+\definecolor{accent}{HTML}{0F4C75}
+\definecolor{warn}{HTML}{C0392B}
+\definecolor{bg}{HTML}{F5F5F5}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=accent,
+    urlcolor=accent,
+    citecolor=accent,
+    pdftitle={钱学森问题扩展求解 - 期末设计项目要求},
+    pdfauthor={浙江大学数学科学学院}
+}
+
+\lstset{
+    basicstyle=\ttfamily\small,
+    backgroundcolor=\color{bg},
+    breaklines=true,
+    frame=single,
+    framerule=0pt,
+    xleftmargin=0.6em,
+    xrightmargin=0.6em,
+    columns=flexible,
+    keepspaces=true,
+    showstringspaces=false,
+}
+
+\newcommand{\cmark}{\textcolor{green!55!black}{\ding{51}}}
+\newcommand{\xmark}{\textcolor{warn}{\ding{55}}}
+
+% ========== 提示框 ==========
+\newtcolorbox{notebox}[1][]{
+    enhanced, breakable, sharp corners,
+    colback=accent!6, colframe=accent,
+    boxrule=0.6pt, left=8pt, right=8pt, top=6pt, bottom=6pt,
+    fonttitle=\bfseries\sffamily, title=#1
+}
+\newtcolorbox{warnbox}[1][]{
+    enhanced, breakable, sharp corners,
+    colback=warn!6, colframe=warn,
+    boxrule=0.6pt, left=8pt, right=8pt, top=6pt, bottom=6pt,
+    fonttitle=\bfseries\sffamily, title=#1
+}
+
+% ========== 标题 ==========
+\title{\heiti 《人工智能与数学软件》期末设计项目\\[8pt]
+       \Large 钱学森问题的扩展求解\\
+       \large 含月球借力与发射窗口优化的绕日返回轨道设计}
+\author{\kaishu 浙江大学数学科学学院}
+\date{\kaishu 2025--2026 学年春季学期}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent 本项目要求你在钱学森《星际航行概论》（2008 版）第 5--6 章建立的拼接圆锥曲线理论基础上，扩展求解一个完整的工程级行星际轨道问题：火箭从地球出发，借助月球引力做一次速度修正，进入日心椭圆转移轨道；绕过太阳后返回与地球相遇。你需要在 2026 年一年周期内搜索使总速度增量最小的发射窗口。
+\end{abstract}
+
+\tableofcontents
+\bigskip
+
+% ============================================================
+\section{课程信息}
+
+\begin{tabular}{@{}ll@{}}
+课程名称   & 人工智能与数学软件 \\
+学院       & 浙江大学数学科学学院 \\
+学期       & 2025--2026 春季 \\
+项目形式   & \textbf{个人项目}，不允许团队合作 \\
+截止日期   & \textbf{2026 年 7 月 4 日 23:59}（以 Gitea 服务器 push 时间戳为准） \\
+\end{tabular}
+
+% ============================================================
+\section{项目背景}
+
+钱学森先生在《星际航行概论》（中国宇航出版社，2008 年）第 5--6 章系统建立了行星际轨道设计的\textbf{拼接圆锥曲线}（patched conic）理论框架，并以"火箭绕过太阳返回地球"为典型算例。在该书 §6.3 第一方案中，他给出了化学推进直接飞行的发射速度估算约 $16.84$\,km/s，飞行时间约半个轨道周期。
+
+然而，钱先生受限于当时手算条件，作了较强简化：
+
+\begin{enumerate}[label=(\arabic*)]
+    \item 仅采用\textbf{二体拼接圆锥曲线}，未利用月球这一近地天然引力源；
+    \item \textbf{未考虑发射窗口的优化}，即给定 $r_p$ 后，从一年中不同日期出发会得到不同的总能量消耗；
+    \item 未做与真实历表（如 JPL Horizons）的数值对照。
+\end{enumerate}
+
+本项目要求你在钱先生的理论基础上，借助现代数值方法和真实历表数据，\textbf{补齐上述三项扩展}。
+
+% ============================================================
+\section{问题陈述}
+
+\subsection{物理问题}
+
+\begin{notebox}[核心任务]
+从地球表面发射一枚火箭，使其先\textbf{借助月球的引力做一次速度修正}，进入一条日心椭圆转移轨道；火箭沿该椭圆飞行，绕过太阳（即经过近日点）后，沿椭圆另一支返回到地球轨道，要求\textbf{与地球在空间中相遇}。\\[4pt]
+在 \textbf{2026 年一年内}寻找一个最优发射日期 $t_0$，使所需的\textbf{总速度增量} $\Delta v_{\text{total}}$ 最小。
+\end{notebox}
+
+\subsection{目标函数}
+
+\begin{equation}\label{eq:objective}
+    \Delta v_{\text{total}}(t_0,\,r_m,\,\text{side},\,r_p) \;=\;
+    |\Delta v_{\text{发射}}| \;+\; |\Delta v_{\text{月借残差}}| \;+\; |\Delta v_{\text{再入}}|
+\end{equation}
+
+各分量含义：
+
+\begin{tabular}{@{}ll@{}}
+\toprule
+分量 & 物理含义 \\
+\midrule
+$\Delta v_{\text{发射}}$     & 从地球表面到月球 SOI 边界所需的初始脉冲速度 \\
+$\Delta v_{\text{月借残差}}$ & 理想被动借力之外为校正轨道所需的微小修正脉冲（理想 $\to 0$） \\
+$\Delta v_{\text{再入}}$     & 返回时使火箭与地球轨道相切并减速至再入速度所需的脉冲 \\
+\bottomrule
+\end{tabular}
+
+\subsection{设计变量}
+
+\begin{tabular}{@{}lll@{}}
+\toprule
+变量 & 取值范围 & 物理含义 \\
+\midrule
+$t_0$  & 2026-01-01 -- 2026-12-31，步长 1\,d & 离开地球表面的瞬时 \\
+$r_m$  & $[R_{\text{moon}}+100,\;50000]$\,km & 月球借力时与月心的最近距离 \\
+side   & $\{\text{leading},\text{trailing}\}$ & 从月球运动方向的前侧或后侧绕过 \\
+$r_p$  & $[2R_{\text{sun}},\;0.4r_1]$ & 日心椭圆的近日点距离 \\
+\bottomrule
+\end{tabular}
+
+\subsection{约束}
+
+\begin{enumerate}[label=\textbf{C\arabic*.},leftmargin=*]
+    \item $r_m \ge R_{\text{moon}} + 100 = 1838$\,km，$R_{\text{moon}} = 1737.4$\,km（不撞月）；
+    \item $r_p > R_{\text{sun}} = 6.96 \times 10^5$\,km（不撞日）；
+    \item 总飞行时间 $T_{\text{total}} \le 2$\,年；
+    \item 再入相对速度 $v_\infty \le 15$\,km/s（防热可承受）；
+    \item N-体仿真总能量相对漂移 $\le 10^{-6}$（一年内）。
+\end{enumerate}
+
+% ============================================================
+\section{技术规范}
+
+\subsection{数学模型}
+
+\begin{itemize}[leftmargin=*]
+    \item \textbf{理论框架}：钱学森《星际航行概论》第 5--6 章拼接圆锥曲线法；
+    \item \textbf{月球借力}：在月球作用范围（SOI $\approx 6.6\times 10^4$\,km）内将运动视为月心二体双曲线轨道，进出 SOI 时做坐标变换（参 Vallado §12.4 或 Curtis §8.10）；
+    \item \textbf{N-体仿真模型}：太阳 + 地球 + 月球 + 火箭（火箭质量忽略不计，作为试探粒子）；
+    \item \textbf{参考系}：J2000 黄道平面投影（2D），单位 km、s；
+    \item \textbf{历表来源}：JPL Horizons 系统，通过课程提供的代理服务（详见 §\ref{sec:resources}）。
+\end{itemize}
+
+\subsection{推荐数值方法}
+
+\begin{itemize}[leftmargin=*]
+    \item \textbf{积分器（推荐）}：Velocity-Verlet（2 阶辛积分器），主步长 $h = 3600$\,s，事件细化阶段可减至 $h = 60$\,s。你可自行选择其他积分方案（如 RK4、辛 Yoshida 4 阶等），但须在报告中说明选择理由与守恒性验证；
+    \item \textbf{优化算法（推荐）}：外层 365 个发射日期粗扫描 + 内层 $(r_m, r_p)$ 参数网格 + 黄金分割/二分精化；
+    \item \textbf{守恒量监测（推荐）}：每 1000 步检查总能量与角动量相对漂移并记录日志。
+\end{itemize}
+
+\subsection{推荐编程环境}
+
+\begin{itemize}[leftmargin=*]
+    \item \textbf{语言（推荐）}：Python 3.10+；如使用其他语言（C/C++、Julia、MATLAB 等）须自行解决 Horizons 接入与 LaTeX 集成；
+    \item \textbf{推荐包}：\texttt{numpy}, \texttt{scipy}, \texttt{matplotlib}, \texttt{astroquery}, \texttt{astropy}；
+    \item \textbf{视频生成}：\texttt{ffmpeg}；
+    \item \textbf{conda 环境}：课程提供 \texttt{Teaching} 环境；
+    \item \textbf{AI 工具}：可使用 Claude Code、Cursor、Copilot 等，但须在致谢中如实声明（详见 §\ref{sec:credits}）。
+\end{itemize}
+
+% ============================================================
+\section{必做项}
+
+你必须完成以下各项。任何一项缺失或不达标，将\textbf{酌情扣分}。
+
+\begin{description}[leftmargin=2.5em,style=nextline]
+    \item[M1\,拼接圆锥曲线代码化] 把现有 \texttt{report.tex} §3--§5 的步骤一至步骤六编码化为可调用的函数，输入近日距 $r_p$、地球轨道半径 $r_1$、日心引力常数 $K_s$，输出椭圆轨道根数与速度增量。要求与现 $r_p=0.2$\,AU 算例数值偏差 $\le 0.1\%$。
+
+    \item[M2\,N-体数值积分器] 实现 Sun-Earth-Moon-Rocket 四体的数值积分模块，提供加速度计算、单步推进、整段传播三个核心接口。在二体圆轨道基准（$\mu = 4\pi^2$，无量纲）上验证 1 年内位置相对误差 $\le 10^{-4}$。
+
+    \item[M3\,JPL Horizons 历表对照] 仅用 N-体传播 Sun-Earth-Moon 一年，与 JPL Horizons 历表对比，输出每日位置与速度残差，要求所有天体位置残差 $\le 6000$\,km。
+
+    \item[M4\,月球借力解析与数值实现] 实现月球借力的解析公式（双曲线偏折）与数值仿真两套实现，并对比验证。
+
+    \item[M5\,单点轨道求解] 在固定发射日期下求解满足任务约束的完整轨道，输出三段 $\Delta v$ 数值，与无月球借力情况对比，记录节能比例。
+
+    \item[M6\,一年周期最优发射窗口扫描] 在 2026 年 365 个日期上扫描，对每个日期做内层参数精化，输出 $\Delta v_{\text{total}}(t_0)$ 曲线与 $(t_0, r_p)$ 等值线，报告最优发射日期 $t_0^*$、对应 $r_m^*, r_p^*$ 与最小 $\Delta v_{\text{total}}^*$。
+
+    \item[M7\,灵敏度与误差分析] 围绕最优解做近月距、发射日期偏移、积分步长三方面的灵敏度/收敛性分析。
+
+    \item[M8\,可视化与展示] 生成静态图（轨道、能量守恒、扫描曲线、残差等）。
+\end{description}
+
+\begin{warnbox}[关于 Horizons 查询]
+查询 Horizons 必须使用 \texttt{CENTER='@10'} 而非 \texttt{CENTER='10'}，否则会被解析为地面观测站，引入 $\sim 0.3$\,km/s 的地球自转噪声。详见 §\ref{sec:resources}。
+\end{warnbox}
+
+% ============================================================
+\section{选做加分项}
+
+完成以下项可\textbf{酌情加分}，无上限要求。请在报告中明确标注。
+
+\begin{description}[leftmargin=2.5em,style=nextline]
+    \item[O1\,3D 扩展] 把 2D 仿真扩展到 3D，纳入月球 5.1° 轨道倾角，分析其对最优窗口的影响。
+
+    \item[O2\,相对论修正] 在近日点附近加入广义相对论修正项 $\sim 3\mu^2/(c^2 r^4)$，定量分析其对轨道的影响。
+
+    \item[O3\,自定义微分修正器] 不使用 \texttt{scipy.optimize}，自行实现 Newton-Raphson 微分修正或 Lambert 求解器。
+
+    \item[O4\,多次借力] 探索 Earth $\to$ Moon $\to$ Venus $\to$ Sun $\to$ Earth 等更复杂的多次借力轨道。
+
+    \item[O5\,轨道动画] 生成一段 30--60 秒的轨道动画 MP4，含关键事件 zoom-in。
+
+    \item[O6\,实时交互演示] 仿照 \texttt{week9/src/two\_body\_realtime.py} 风格做一个 Tkinter 或 Web 实时交互演示。
+
+    \item[O7\,其他创新] 任何与项目主题相关、有思考深度的扩展（如机器学习辅助轨道设计、并行计算加速扫描等）。
+\end{description}
+
+% ============================================================
+\section{致谢要求}\label{sec:credits}
+
+报告须包含独立的\textbf{致谢}章节，你需要如实声明以下两类信息：
+
+\subsection{他人帮助的声明}
+
+虽然本项目是\textbf{个人项目，不允许团队合作}，但你可以从同学、助教、网络论坛等渠道获得概念性讨论或调试建议。\textbf{凡获得他人帮助者必须在致谢中声明}，例如：
+
+\begin{lstlisting}
+感谢同学 XXX 与我讨论了月球 SOI 边界的坐标变换公式；
+感谢助教 YYY 指出我的能量守恒计算中遗漏了月球-火箭项；
+感谢 Stack Overflow 用户 ZZZ 的 SciPy Brent 求根用法示例。
+\end{lstlisting}
+
+\subsection{AI 工具使用声明}
+
+允许使用 AI 工具，但\textbf{必须如实声明你使用了哪些工具、它们提供了什么帮助}。声明粒度需具体到模块或步骤，例如：
+
+\begin{lstlisting}
+- Claude Code (Opus 4.7)：协助设计 `nbody.py` 的接口；生成 TikZ 图初稿；
+  调试 Verlet 积分器中的索引错误。
+- Cursor (gpt-5)：协助补全 matplotlib 颜色映射代码；
+  生成 README.md 草稿。
+- ChatGPT：解释 Horizons API 的 STEP_SIZE 参数语义。
+\end{lstlisting}
+
+\textbf{所有关键 AI 交互摘要还需汇总到 \texttt{AI-Agent.md}}，详见 §\ref{sec:deliverables}。
+
+% ============================================================
+\section{交付物}\label{sec:deliverables}
+
+\subsection{提交方式（Git 仓库）}
+
+本项目\textbf{不再接收压缩包}，统一通过 Git 提交至课程 Gitea 服务器。
+
+\begin{notebox}[仓库地址]
+\begin{itemize}[leftmargin=*,nosep]
+    \item \textbf{Gitea 服务器}：\url{http://10.72.190.121:3000/}
+    \item \textbf{仓库地址}：\texttt{http://10.72.190.121:3000/<学号>/FinalProject.git}
+    \item \textbf{账户名}：\textbf{必须为本人学号}（例如 \texttt{323011xxxx}），不得使用姓名拼音、昵称或其他形式
+\end{itemize}
+\end{notebox}
+
+\textbf{提交流程}：
+
+\begin{enumerate}[leftmargin=*,nosep]
+    \item 在 Gitea 上创建名为 \texttt{FinalProject} 的新仓库；\textbf{必须选择 \texttt{私有 (Private)}}，否则代码泄露后果自负；
+    \item 本地项目根目录初始化 \texttt{git init}，配置好 \texttt{.gitignore}（排除 \texttt{build/}、\texttt{*.aux}、\texttt{*.log}、大体积中间数据等）；
+    \item 将代码、文档、Makefile 等组织成如下目录结构；
+    \item 通过 \texttt{git push} 将最终提交版本推送至 Gitea 远端 \texttt{main}（或 \texttt{master}）分支；
+    \item \textbf{以 Gitea 服务器端记录的最接近 DDL（2026-07-04 23:59）的 \texttt{push} 时间作为提交时间}。超出 DDL 的 \texttt{push} 不予接收。
+\end{enumerate}
+
+\subsection{目录结构}
+
+仓库根目录\textbf{仅含}以下内容（多余文件请勿提交，请在 \texttt{.gitignore} 中排除）：
+
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize]
+FinalProject/
+├── .gitignore      排除 build/、*.aux、*.log、大体积数据等
+├── report.tex      LaTeX 报告源文件
+├── Makefile        构建脚本：make all 须生成 PDF + 图表 + 视频
+├── README.md       5 分钟内可重现的运行说明
+├── AI-Agent.md     AI 工具使用记录（提示词、产出、人工修正）
+├── src/            所有源代码
+└── data/           历表缓存、扫描结果等中间数据
+\end{lstlisting}
+
+\subsection{Makefile 要求}
+
+\texttt{make all} 必须能：
+
+\begin{enumerate}[leftmargin=*]
+    \item 调用 \texttt{src/} 下的脚本生成所有图表（PDF/PNG）；
+    \item 渲染轨道动画视频（MP4）；
+    \item 用 XeLaTeX 编译 \texttt{report.tex} 为 \texttt{report.pdf}；
+    \item 在合理时间内完成（如需较长时间请在 README 中说明并提供 \texttt{make pdf} 仅编译 PDF 的目标）。
+\end{enumerate}
+
+\texttt{make clean} 须清理所有生成文件。
+
+\subsection{仓库大小与页数上限}
+
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Git 仓库总大小（make 前，即未编译时）}：$\le \mathbf{10}$\,MB（请在 \texttt{.gitignore} 中排除 \texttt{build/}、\texttt{checkpoints/}、大体积 \texttt{.mp4}、\texttt{.json} 缓存等）；
+    \item \textbf{\texttt{report.pdf}（make 后）}：$\le 40$ 页；
+    \item 超出上限的提交不予评分。必要时请精简代码、压缩数据缓存、控制图片分辨率；
+    \item \textbf{严禁将大文件（如模型权重、完整历表原始数据）\texttt{git add} 进仓库}，否则会拖慢助教克隆速度。
+\end{itemize}
+
+% ============================================================
+\section{评分原则}
+
+总体评分采用\textbf{综合定性评估}，由助教与教师共同给出，不公开各项具体权重。评分主要考虑以下维度：
+
+\begin{itemize}[leftmargin=*]
+    \item 必做项完成度与正确性（缺项或错误将酌情扣分）；
+    \item 选做项的深度与创新性（酌情加分）；
+    \item 报告写作质量（公式规范、引用规范、图表说明、逻辑清晰）；
+    \item 代码质量（模块化、可重现、注释适度）；
+    \item AI 工具使用的真实性与反思深度。
+\end{itemize}
+
+\begin{warnbox}[硬性惩罚]
+\textbf{抄袭他人代码或报告（含直接复制网络内容）：本项目记 0 分。}
+\end{warnbox}
+
+% ============================================================
+\section{参考资料}
+
+\subsection*{必读}
+
+\begin{enumerate}[label={[\arabic*]}]
+    \item 钱学森，《星际航行概论》（2008 年版）第 5--6 章（课程已提供 PDF）；
+    \item Vallado D. A., \textit{Fundamentals of Astrodynamics and Applications}, 4th ed., §12.4 月球借力；
+    \item Curtis H. D., \textit{Orbital Mechanics for Engineering Students}, 3rd ed., §8.10 patched conic + swing-by。
+\end{enumerate}
+
+\subsection*{推荐}
+
+\begin{enumerate}[label={[\arabic*]},start=4]
+    \item Battin R. H., \textit{An Introduction to the Mathematics and Methods of Astrodynamics}, AIAA, 1999；
+    \item JPL Horizons User Manual: \url{https://ssd.jpl.nasa.gov/horizons/manual.html}；
+    \item 课程 \texttt{week9/} 目录下所有 Python 脚本（特别是 \texttt{JPL.py} 与 \texttt{eclipse\_predict.py}）；
+    \item Claude Code 官方文档：\url{https://docs.claude.com/claude-code}。
+\end{enumerate}
+
+% ============================================================
+\section{可用资源（课程提供）}\label{sec:resources}
+
+\subsection{代码脚手架}
+
+\begin{longtable}{@{}lll@{}}
+\toprule
+资源 & 路径 & 用途 \\
+\midrule
+\endhead
+Horizons 代理脚本 & \texttt{week9/src/jpl\_forward.py} & 跨过 GFW 访问 Horizons \\
+Horizons 配置     & \texttt{final\_project/Qian/JPL\_API.env} & 代理 URL + token \\
+2 体 Verlet 模板  & \texttt{week9/src/JPL.py} & 积分器与历表对比 \\
+N-体框架          & \texttt{week9/src/eclipse\_predict.py} & 加速度函数、二分搜索 \\
+积分器基准        & \texttt{week9/src/Euler\_vs\_Verlet.py} & 验证积分器正确性 \\
+动画模板          & \texttt{Qian/2D\_gravity/gravity\_curved\_space.py} & FuncAnimation \\
+现有解析推导      & \texttt{final\_project/Qian/report.tex} & §1--§5 已完成 \\
+\bottomrule
+\end{longtable}
+
+\subsection{Horizons 代理使用要点（已实测，2026-05-30）}
+
+\begin{notebox}[代理可用性]
+代理 URL 与 token 已在公开版本中脱敏；如需在线查询，请使用本地私有配置文件。2026 全年日期都在 EOP 覆盖范围内（实测数据至 2026-05-29，预报至 2026-08-24）。
+\end{notebox}
+
+\begin{warnbox}[CENTER 参数陷阱]
+代理对 \texttt{CENTER} 参数有特殊行为。\textbf{必须使用 \texttt{@<body\_id>} 格式}获取天体质心坐标，否则会返回地面观测站坐标（含 Earth 自转噪声）：
+\vspace{4pt}
+\begin{center}
+\small
+\begin{tabular}{@{}cl@{}}
+\toprule
+写法 & 行为 \\
+\midrule
+\xmark\ \texttt{CENTER='10'}   & 解析为 Caussols（法国）地面站，含自转 \\
+\cmark\ \texttt{CENTER='@10'}  & 真正的太阳质心系 BODY CENTER \\
+\xmark\ \texttt{CENTER='399'}  & 解析为 Kushiro（日本）地面站，含自转 \\
+\cmark\ \texttt{CENTER='@399'} & 真正的地心系 BODY CENTER \\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{warnbox}
+
+\textbf{astroquery 调用范例}（已实测）：
+
+\begin{lstlisting}[language=Python]
+import sys; sys.path.insert(0, 'src')
+import jpl_forward            # 必须先导入以打补丁
+from astroquery.jplhorizons import Horizons
+
+obj = Horizons(
+    id='399',                 # 地球
+    location='@10',           # 太阳质心
+    epochs={'start':'2026-06-15', 'stop':'2026-06-17', 'step':'1d'},
+)
+vec = obj.vectors()           # 返回 astropy Table, AU, AU/day
+\end{lstlisting}
+
+\textbf{实测验证（2026-06-15 地球日心坐标）}：
+
+\begin{itemize}[leftmargin=*]
+    \item 位置 $(-0.114, -1.009, 5.88\!\times\!10^{-5})$\,AU，模 $1.015$\,AU \cmark
+    \item 速度 $(0.0168, -0.00199, 2.52\!\times\!10^{-7})$\,AU/day $=29.13$\,km/s \cmark
+\end{itemize}
+
+\textbf{备份方案}：若代理在学期内失效，课程将在 \texttt{data/horizons\_cache\_2026.json} 预下载 2026 全年 366 天的 Sun-Earth-Moon 状态向量（约 500\,KB）供离线使用。
+
+% ============================================================
+\section{截止日期}
+
+\begin{center}
+\Large\bfseries\color{warn}
+2026 年 7 月 4 日 23:59（以 Gitea 服务器 push 时间戳为准）
+\end{center}
+
+超出 DDL 的 \texttt{git push} 将被忽略，不予评分。建议预留至少 3 天进行最终编译测试与 \texttt{make all} 流程验证，避免临近 DDL 出现环境问题。
+
+\end{document}

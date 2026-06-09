@@ -1,0 +1,101 @@
+# LaTeX build output
+week9/build/
+week10/build/
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.nav
+*.out
+*.snm
+*.toc
+*.vrb
+*.xdv
+*.synctex.gz
+*.latexmkrc
+
+# Script-generated outputs
+week9/output/
+week9/figures/circle_orbit_comparison.png
+week9/figures/conservation_errors_h1e-02.png
+week9/figures/conservation_errors_h1e-03.png
+week9/report.pdf
+
+# Generated PDF slides
+week10/*.pdf
+
+# Generated notebooks and media outputs
+.ipynb_checkpoints/
+*.pdf
+*.mp4
+
+# Final project deliverable
+!final_project/Qian/report.pdf
+!AI4Math_Project_Summary.pdf
+final_project/Qian/build/
+
+# Local credentials and platform-specific generated binaries
+*.env
+!final_project/Qian/JPL_API.env
+*.exe
+week3/build/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Local tool marker
+.codex
+
+# week11 — datasets (downloadable via download_datasets.sh)
+week11/datasets/
+# week11 — LaTeX build artifacts
+week11/build/
+# week11 — compiled PDF (recompilable from .tex)
+week11/*.pdf
+# week11 — Python cache
+week11/__pycache__/
+# week11 — compiled C binary
+week11/mnist_mlp_infer
+# week11 — trained checkpoints (retrainable)
+week11/checkpoints/
+# week11 — temp hand-drawn samples
+week11/samples/drawn_*
+
+# week12 — compiled C binaries
+week12/fdm3d/fdm3d
+week12/fdm3d/write_mat
+week12/fdm3d/read_mat
+week12/fdm3d/jacobi
+week12/fdm3d/sor_scan
+week12/fdm3d/bench_pardiso
+week12/gauss_elimination/test
+week12/gauss_elimination/test_opt
+week12/gauss_elimination/bench_mkl
+week12/sparse/csr_demo
+week12/sparse/csr_test
+# week12 — object files
+*.o
+# week12 — generated data/results/plots
+week12/fdm3d/mat.dat
+week12/fdm3d/results_*.txt
+week12/fdm3d/conv_*.txt
+week12/fdm3d/*.png
+week12/fdm3d/sor_scan.txt
+week12/gauss_elimination/results_*.txt
+week12/gauss_elimination/numpy_backend.txt
+# week12 — session recordings
+week12/claude-record.md
+week12/*/claude-record.md
+# week12 — compiled PDF (recompilable from .tex)
+week12/**/*.pdf
+# week12 — stray LaTeX logs
+week12/**/missfont.log
+week12/**/texput.log
+week12/fdm3d/q.log
+
+# Common OS/editor noise
+.DS_Store
+Thumbs.db

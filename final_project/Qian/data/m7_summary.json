@@ -1,0 +1,8 @@
+{
+  "rm_total_span_km_s": 0.2924921020324618,
+  "date_total_span_km_s": 0.0594656091717205,
+  "max_abs_date_slope_km_s_per_day": 0.004166646730663359,
+  "verlet_order": 1.9998909836067227,
+  "rk4_order": 4.053072512356799,
+  "convergence_rows": 10
+}

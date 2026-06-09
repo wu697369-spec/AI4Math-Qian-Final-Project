@@ -1,52 +1,69 @@
-# AI4Math Scientific Computing Portfolio
+# AI4Math Final Project: Qian Solar-Return Trajectory
 
-This repository is a course-based mathematical software portfolio built around
-deep learning, numerical methods, scientific visualization, and celestial
-mechanics. It is suitable for a CV or research-assistant application as an
-academic project portfolio, not as formal research experience.
+This repository contains the AI4Math final project implementation for a
+Qian-style solar-return trajectory. The project starts from the patched-conic
+calculation in Qian Xuesen's space navigation treatment and extends it with
+Moon-assisted trajectory modeling, Sun-Earth-Moon N-body propagation, cached
+JPL Horizons comparison, 2026 launch-window search, sensitivity analysis, and
+static visualizations.
 
-## Positioning for RA Applications
+## Project Goal
 
-The strongest parts for a biomedical AI / scientific computing RA application
-are:
+The main task is to design and analyze a spacecraft trajectory that:
 
-- PyTorch image-learning experiments on MNIST-family datasets.
-- Numerical computing modules in C/C++ and Python, including sparse matrices,
-  LU decomposition, and Poisson solver demonstrations.
-- Scientific visualization workflows with Jupyter, PyVista, and VTK.
-- A final celestial-mechanics project with N-body integration, cached JPL
-  Horizons validation, lunar flyby modeling, launch-window search, and a
-  reproducible LaTeX report.
+1. departs from Earth,
+2. uses a lunar flyby as a passive gravity-assist correction,
+3. enters an inward heliocentric transfer ellipse,
+4. passes near the Sun,
+5. returns to Earth's orbit.
 
-The project demonstrates preparation in Python, LaTeX, scientific plotting,
-numerical modeling, experiment documentation, and reproducible command-line
-workflows.
+The implementation is organized around milestones M1-M8 from the project
+specification.
 
-## Repository Map
+## Repository Structure
 
-| Path | Topic | Representative output |
-| --- | --- | --- |
-| `week11/` | Deep learning with PyTorch | MLP/CNN, AE/DAE/VAE, latent-space plots |
-| `week12/` | Numerical methods | LU, sparse CRS, 3D Poisson, solver benchmarks |
-| `week13/` | Scientific visualization | MRI slices, terrain, molecule, weather-field plots |
-| `final_project/Qian/` | Celestial mechanics final project | M1-M8 code, figures, and `report.pdf` |
+```text
+final_project/Qian/
+  README.md                 Reproducibility guide for the final project
+  AI-Agent.md               AI assistance disclosure
+  Makefile                  Milestone and report build targets
+  report.pdf                Final compiled report
+  report.tex                LaTeX report source
+  Qian.bib                  Bibliography
+  PROJECT_SPEC.tex          Project specification copy
+  JPL_API.env               Placeholder template for optional Horizons proxy config
+  src/                      Python source code for M1-M8
+  data/                     Cached ephemeris and generated numerical results
+  figures/                  Generated figures used by the report
+```
 
-## Key Deliverables
+## Milestones
 
-- `AI4Math_Project_Summary.pdf`: one-page project summary for CV/RA attachment.
-- `final_project/Qian/report.pdf`: final project report.
-- `final_project/Qian/README.md`: reproducibility guide for the final project.
-- `final_project/Qian/AI-Agent.md`: AI assistance disclosure.
-- `week11/experiments.md`: deep-learning experiment notes.
-- `week13/outputs/opendx_cases/case4_mri_slices.png`: scientific visualization example.
+| Target | Content |
+| --- | --- |
+| `make m1` | Patched-conic baseline calculation |
+| `make m2` | N-body integrator benchmark |
+| `make m3` | Cached JPL Horizons ephemeris comparison |
+| `make m4` | Lunar flyby analytic and numerical validation |
+| `make m5` | Single-date full trajectory delta-v accounting |
+| `make m6` | 2026 launch-window scan |
+| `make m7` | Sensitivity and convergence analysis |
+| `make m8` | Static figures and LaTeX result macros |
+| `make all` | Regenerate results/figures and compile `report.pdf` |
 
 ## Quick Start
 
-The final project is the most self-contained part of this repository.
+Use the course environment:
 
 ```bash
 conda activate Teaching
 cd final_project/Qian
+make all
+```
+
+To run milestones one by one:
+
+```bash
 make m1
 make m2
 make m3
@@ -55,27 +72,35 @@ make m5
 make m6
 make m7
 make m8
-make all
 ```
 
-To compile the one-page portfolio summary from the repository root:
+## Main Results
 
-```bash
-xelatex -interaction=nonstopmode -jobname=AI4Math_Project_Summary project_summary.tex
-```
+- M1 reproduces the patched-conic launch-speed baseline near `16.84 km/s`.
+- M2 validates the N-body integrator on a dimensionless circular-orbit
+  benchmark.
+- M3 compares one-year Sun-Earth-Moon propagation against cached Horizons
+  states and satisfies the project residual requirement.
+- M4 confirms that the analytic lunar hyperbolic-turn formula agrees with a
+  numerical moon-centered flyby integration.
+- M5 shows that a leading lunar flyby reduces the total delta-v for the fixed
+  `2026-06-26`, `rp=0.2 AU` case.
+- M6 finds the best fixed-`rp` 2026 launch window near late June / early July.
+- M7 shows that near-Moon distance is the dominant flyby sensitivity, while the
+  launch date has a relatively broad tolerance around the optimum.
+- M8 generates the report figures and `data/results_macros.tex`.
 
-## Technical Skills Represented
+## Important Files
 
-- Python: NumPy, SciPy, matplotlib, PyTorch, data processing scripts.
-- Scientific computing: N-body simulation, Velocity-Verlet, RK4, sparse matrix
-  workflows, convergence checks.
-- Visualization: matplotlib, Jupyter, PyVista, VTK.
-- Reproducibility: Makefile targets, CSV/JSON result artifacts, LaTeX reports.
-- Writing: English/Chinese technical reporting and AI-use disclosure.
+- Final report: `final_project/Qian/report.pdf`
+- Source code: `final_project/Qian/src/`
+- Figures: `final_project/Qian/figures/`
+- Numerical outputs: `final_project/Qian/data/`
+- AI-use disclosure: `final_project/Qian/AI-Agent.md`
 
-## Privacy and Public-Release Notes
+## Notes on Credentials
 
-This repository should not publish local credentials, private API tokens,
-temporary build products, executable binaries, or personal cache files. The
-tracked `final_project/Qian/JPL_API.env` is intentionally a placeholder
-template; use a private local environment file for real credentials.
+The tracked `final_project/Qian/JPL_API.env` file is only a placeholder
+template. Real proxy URLs or API tokens should be kept in a private, untracked
+local file. The project can be reproduced from the included cached 2026
+Horizons data without online credentials.

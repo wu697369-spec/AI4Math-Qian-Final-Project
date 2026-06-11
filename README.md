@@ -20,59 +20,7 @@ The main task is to design and analyze a spacecraft trajectory that:
 The implementation is organized around milestones M1-M8 from the project
 specification.
 
-## Repository Structure
 
-```text
-final_project/Qian/
-  README.md                 Reproducibility guide for the final project
-  AI-Agent.md               AI assistance disclosure
-  Makefile                  Milestone and report build targets
-  report.pdf                Final compiled report
-  report.tex                LaTeX report source
-  Qian.bib                  Bibliography
-  PROJECT_SPEC.tex          Project specification copy
-  JPL_API.env               Placeholder template for optional Horizons proxy config
-  src/                      Python source code for M1-M8
-  data/                     Cached ephemeris and generated numerical results
-  figures/                  Generated figures used by the report
-```
-
-## Milestones
-
-| Target | Content |
-| --- | --- |
-| `make m1` | Patched-conic baseline calculation |
-| `make m2` | N-body integrator benchmark |
-| `make m3` | Cached JPL Horizons ephemeris comparison |
-| `make m4` | Lunar flyby analytic and numerical validation |
-| `make m5` | Single-date full trajectory delta-v accounting |
-| `make m6` | 2026 launch-window scan |
-| `make m7` | Sensitivity and convergence analysis |
-| `make m8` | Static figures and LaTeX result macros |
-| `make all` | Regenerate results/figures and compile `report.pdf` |
-
-## Quick Start
-
-Use the course environment:
-
-```bash
-conda activate Teaching
-cd final_project/Qian
-make all
-```
-
-To run milestones one by one:
-
-```bash
-make m1
-make m2
-make m3
-make m4
-make m5
-make m6
-make m7
-make m8
-```
 
 ## Main Results
 
@@ -90,17 +38,3 @@ make m8
   launch date has a relatively broad tolerance around the optimum.
 - M8 generates the report figures and `data/results_macros.tex`.
 
-## Important Files
-
-- Final report: `final_project/Qian/report.pdf`
-- Source code: `final_project/Qian/src/`
-- Figures: `final_project/Qian/figures/`
-- Numerical outputs: `final_project/Qian/data/`
-- AI-use disclosure: `final_project/Qian/AI-Agent.md`
-
-## Notes on Credentials
-
-The tracked `final_project/Qian/JPL_API.env` file is only a placeholder
-template. Real proxy URLs or API tokens should be kept in a private, untracked
-local file. The project can be reproduced from the included cached 2026
-Horizons data without online credentials.
